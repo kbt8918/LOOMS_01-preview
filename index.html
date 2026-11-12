@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#2B323D}
+a{color:#14599F}a:hover{color:#0B4A8F}
+*{box-sizing:border-box}button,select{white-space:nowrap}button{flex:none}
+input,select,button{font-family:'Malgun Gothic','Segoe UI',sans-serif}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:safe center;justify-content:safe center;width:max-content;min-width:100%;padding:24px;font:13px/20px 'Malgun Gothic','Segoe UI',sans-serif;color:#1C2129">
+
+<!-- ===== SCR-001 초기화면 ===== -->
+<sc-if value="{{ isSplash }}" hint-placeholder-val="{{ true }}">
+<div style="width:640px;height:480px;flex:none;background:#fff;border:1px solid #9AA2AE;box-shadow:0 4px 16px rgba(0,0,0,.18);display:flex;flex-direction:column;position:relative">
+  <div style="height:32px;background:#EFF1F4;border-bottom:1px solid #C8CDD5;display:flex;align-items:center;padding:0 12px;font-size:12px;color:#4A525F;justify-content:space-between"><span>램프광학 설계정보 및 산출물 통합관리 시스템</span><span>v1.0.0</span></div>
+  <div style="padding:20px 24px 0;text-align:center">
+    <div style="width:48px;height:48px;margin:0 auto 8px;border:2px solid #14599F;border-radius:50%;display:flex;align-items:center;justify-content:center"><div style="width:20px;height:20px;border:2px solid #14599F;border-top-color:transparent;border-radius:50%;animation:spin .9s linear infinite"></div></div>
+    <div style="font:600 15px/22px 'Malgun Gothic';color:#1C2129">램프광학 설계정보 및 산출물 통합관리 시스템</div>
+    <div style="font-size:12px;color:#6B7483">클라이언트 v1.0.0</div>
+  </div>
+  <div style="padding:16px 24px 0;flex:1">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font:600 12px 'Malgun Gothic';color:#4A525F">연결 상태</span><span style="font-size:12px;color:#6B7483">마지막 확인: {{ checkTime }}</span></div>
+    <div style="border:1px solid #E1E4E9;border-radius:4px">
+      <sc-for list="{{ conn }}" as="c" hint-placeholder-count="3">
+      <div style="height:34px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid #E1E4E9">
+        <span style="width:16px;text-align:center;font-weight:700;color:{{ c.color }}">{{ c.icon }}</span>
+        <span style="flex:1">{{ c.name }}</span>
+        <span style="color:{{ c.color }};font-weight:600;white-space:nowrap">{{ c.text }}</span>
+      </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ hasConnErr }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:12px;padding:8px 12px;background:#FFF5E0;border:1px solid #F0CE84;border-radius:4px;color:#8A5A00;font-size:12px;line-height:18px"><b>▲ 파일 저장소에 연결할 수 없습니다.</b><br>설정한 경로를 확인하고 연결을 다시 시도하세요.</div>
+    </sc-if>
+  </div>
+  <div style="height:56px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;padding:0 20px;gap:8px">
+    <button onClick="{{ recheck }}" disabled="{{ checking }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer;opacity:{{ checking ? 0.6 : 1 }}">검사</button>
+    <button onClick="{{ openSettings }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">환경설정</button>
+    <span style="flex:1"></span>
+    <button onClick="{{ tryLogin }}" disabled="{{ checking }}" style="height:28px;padding:0 16px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer;opacity:{{ checking ? 0.6 : 1 }}">로그인</button>
+    <button style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">종료</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===== SCR-003 로그인 ===== -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+<div style="width:420px;height:340px;flex:none;background:#fff;border:1px solid #9AA2AE;box-shadow:0 4px 16px rgba(0,0,0,.18);display:flex;flex-direction:column">
+  <div style="height:32px;background:#EFF1F4;border-bottom:1px solid #C8CDD5;display:flex;align-items:center;padding:0 12px;font-size:12px;color:#4A525F;justify-content:space-between"><span>로그인</span><span>인증</span></div>
+  <div style="flex:1;padding:16px 20px 0">
+    <div style="text-align:center;font:600 15px/22px 'Malgun Gothic';color:#1C2129;margin-bottom:12px">램프광학 설계정보 통합관리</div>
+    <div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">사용자 ID <span style="color:#B3261E">*</span></div>
+    <input value="{{ uid }}" onInput="{{ setUid }}" onKeyDown="{{ loginKey }}" placeholder="admin 입력 시 관리자" style="width:100%;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none">
+    <div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px;margin-top:12px">비밀번호 <span style="color:#B3261E">*</span></div>
+    <div style="position:relative">
+      <input type="{{ pwType }}" value="{{ pw }}" onInput="{{ setPw }}" onKeyDown="{{ loginKey }}" placeholder="fail 입력 시 실패 화면" style="width:100%;height:28px;padding:0 32px 0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none">
+      <span onClick="{{ togglePw }}" style="position:absolute;right:8px;top:4px;font-size:11px;color:#6B7483;cursor:pointer;user-select:none">{{ pwToggleLabel }}</span>
+    </div>
+    <sc-if value="{{ loginErr }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:12px;padding:6px 12px;background:#FDEBEA;border:1px solid #F2B4B0;border-radius:4px;color:#B3261E;font-size:12px;line-height:18px"><b>⛔ 로그인에 실패했습니다.</b><br>아이디/비밀번호를 확인하십시오.</div>
+    </sc-if>
+  </div>
+  <div style="height:48px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;padding:0 20px;gap:8px">
+    <button onClick="{{ openSettings }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">환경설정</button>
+    <span style="flex:1"></span>
+    <button onClick="{{ doLogin }}" style="height:28px;padding:0 16px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">로그인</button>
+    <button onClick="{{ backSplash }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">취소</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===== SCR-004 메인 윈도우 ===== -->
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="width:1280px;height:800px;flex:none;background:#F7F8FA;border:1px solid #9AA2AE;box-shadow:0 4px 16px rgba(0,0,0,.18);display:flex;flex-direction:column;position:relative;overflow:hidden">
+  <div style="height:32px;flex:none;background:#EFF1F4;border-bottom:1px solid #C8CDD5;display:flex;align-items:center;padding:0 12px;font-size:12px;color:#4A525F;justify-content:space-between"><span>램프광학 설계정보 및 산출물 통합관리 시스템</span><span>{{ checkTime }}</span></div>
+  <div style="height:28px;flex:none;background:#EFF1F4;border-bottom:1px solid #C8CDD5;display:flex;position:relative;z-index:20">
+    <sc-for list="{{ menus }}" as="m" hint-placeholder-count="5">
+    <div style="position:relative">
+      <div onClick="{{ m.click }}" style="height:27px;padding:0 12px;display:flex;align-items:center;cursor:pointer;background:{{ m.bg }};color:#333A45;font-weight:{{ m.weight }}">{{ m.label }}</div>
+      <sc-if value="{{ m.open }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;top:27px;left:0;min-width:210px;background:#fff;border:1px solid #9AA2AE;box-shadow:0 4px 16px rgba(0,0,0,.18);padding:4px 0">
+        <sc-for list="{{ m.items }}" as="it" hint-placeholder-count="2">
+        <div onClick="{{ it.click }}" style="height:28px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;white-space:nowrap;color:{{ it.color }};background:{{ it.bg }}">{{ it.label }}<span style="font-size:11px;color:#6B7483">{{ it.code }}</span></div>
+        </sc-for>
+      </div>
+      </sc-if>
+    </div>
+    </sc-for>
+  </div>
+  <div style="height:44px;flex:none;background:#fff;border-bottom:1px solid #C8CDD5;display:flex;align-items:center;padding:0 16px;gap:8px">
+    <span style="font:600 12px 'Malgun Gothic';color:#4A525F">전역 검색:</span>
+    <input value="{{ gq }}" onInput="{{ setGq }}" onKeyDown="{{ gqKey }}" placeholder="프로젝트명, 산출물명, 파일명" style="width:420px;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none">
+    <button onClick="{{ doGlobalSearch }}" style="height:28px;padding:0 16px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">검색</button>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow:auto;padding:12px 16px" onClick="{{ closeMenu }}">
+
+  <!-- SCR-010 프로젝트 목록 -->
+  <sc-if value="{{ s.prjList }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;justify-content:space-between;align-items:center;height:32px;margin-bottom:12px"><div style="font:600 18px/26px 'Malgun Gothic';color:#1C2129">차종 프로젝트 목록</div><button onClick="{{ newPrj }}" style="height:28px;padding:0 16px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">신규</button></div>
+    <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;gap:8px;align-items:center"><span style="font:600 12px 'Malgun Gothic';color:#4A525F;width:56px">프로젝트명</span><input value="{{ fName }}" onInput="{{ setFName }}" style="width:180px;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none"></label>
+        <label style="display:flex;gap:8px;align-items:center"><span style="font:600 12px 'Malgun Gothic';color:#4A525F">디자인</span><select value="{{ fDesign }}" onChange="{{ setFDesign }}" style="width:120px;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>전체</option><option>D-01</option><option>D-02</option><option>D-03</option></select></label>
+        <label style="display:flex;gap:8px;align-items:center"><span style="font:600 12px 'Malgun Gothic';color:#4A525F">광학계</span><select value="{{ fOptic }}" onChange="{{ setFOptic }}" style="width:120px;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>전체</option><option>리플렉터</option><option>렌즈</option><option>복합</option></select></label>
+        <span style="flex:1"></span>
+        <button onClick="{{ resetF }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">↺ 초기화</button>
+        <button onClick="{{ applyF }}" style="height:28px;padding:0 16px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">적용</button>
+      </div>
+    </div>
+    <div style="height:28px;display:flex;align-items:center;gap:12px;font-size:12px;color:#6B7483"><b style="color:#333A45">전체 {{ rowCount }}건</b><span>|</span><span>50건씩</span><span>|</span><span>목록</span></div>
+    <div style="background:#fff;border:1px solid #E1E4E9">
+      <div style="display:grid;grid-template-columns:72px 1.6fr 90px 110px 120px 80px 140px;height:32px;align-items:center;background:#F7F8FA;border-bottom:1px solid #E1E4E9;font:600 12px 'Malgun Gothic';color:#4A525F">
+        <span style="padding:0 8px">썸네일</span>
+        <span style="padding:0 8px">프로젝트</span>
+        <span style="padding:0 8px">디자인</span>
+        <span style="padding:0 8px">광학계</span>
+        <span style="padding:0 8px">LED</span>
+        <span style="padding:0 8px;text-align:right">산출물</span>
+        <span style="padding:0 8px">수정일</span>
+      </div>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+      <div onClick="{{ r.click }}" onDblClick="{{ r.open }}" style="display:grid;grid-template-columns:72px 1.6fr 90px 110px 120px 80px 140px;height:40px;align-items:center;border-bottom:1px solid #E1E4E9;background:{{ r.bg }};cursor:pointer">
+        <span style="padding:0 8px"><span style="display:flex;width:40px;height:28px;background:{{ r.thumbBg }};border:1px solid #E1E4E9;align-items:center;justify-content:center;font-size:11px;color:#9AA2AE">{{ r.thumbText }}</span></span>
+        <span style="padding:0 8px;font-weight:600">{{ r.name }}</span>
+        <span style="padding:0 8px">{{ r.design }}</span>
+        <span style="padding:0 8px">{{ r.optic }}</span>
+        <span style="padding:0 8px">{{ r.led }}</span>
+        <span style="padding:0 8px;text-align:right;color:{{ r.artColor }}">{{ r.arts }}건</span>
+        <span style="padding:0 8px;color:#6B7483">{{ r.mod }}</span>
+      </div>
+      </sc-for>
+      <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}"><div style="padding:40px;text-align:center;color:#6B7483"><div style="font-size:24px;color:#9AA2AE">▭</div>조건에 해당하는 프로젝트가 없습니다.</div></sc-if>
+    </div>
+    <div style="height:36px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:12px;color:#6B7483">‹ 이전 &nbsp;<b style="color:#14599F">[1]</b>&nbsp; 다음 ›</div>
+    <div style="height:44px;background:#EFF1F4;border:1px solid #C8CDD5;display:flex;align-items:center;padding:0 12px;gap:8px">
+      <span style="font-size:12px;color:#4A525F;flex:1">선택: {{ selCount }}건</span>
+      <button onClick="{{ openSel }}" disabled="{{ noSel }}" style="height:28px;padding:0 12px;background:{{ btnBg }};color:{{ btnFg }};border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">열기</button>
+      <button onClick="{{ editSel }}" disabled="{{ noSel }}" style="height:28px;padding:0 12px;background:{{ btnBg }};color:{{ btnFg }};border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">수정</button>
+      <button onClick="{{ askDelete }}" disabled="{{ noSel }}" style="height:28px;padding:0 12px;background:{{ delBg }};color:{{ delFg }};border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">삭제</button>
+    </div>
+  </sc-if>
+
+  <!-- SCR-011 등록·수정 -->
+  <sc-if value="{{ s.prjForm }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;justify-content:space-between;align-items:center;height:32px;margin-bottom:12px"><div style="font:600 18px/26px 'Malgun Gothic';color:#1C2129">{{ formTitle }}</div><a href="#" onClick="{{ toList }}" style="text-decoration:none;color:#14599F">‹ 목록으로</a></div>
+    <sc-if value="{{ hasErrs }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:8px 12px;background:#FDEBEA;border:1px solid #F2B4B0;border-radius:4px;color:#B3261E;font-size:12px;line-height:20px;margin-bottom:12px"><b>⛔ 입력값을 확인하십시오.</b>
+      <sc-for list="{{ errs }}" as="e" hint-placeholder-count="2"><div>- {{ e }}</div></sc-for></div>
+    </sc-if>
+    <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:16px">
+      <div style="font:600 15px/22px 'Malgun Gothic';color:#1C2129;border-bottom:1px solid #E1E4E9;padding-bottom:4px;margin-bottom:12px">기본정보</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:24px;max-width:760px">
+        <div><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">프로젝트명 <span style="color:#B3261E">*</span></div><input value="{{ f.name }}" onInput="{{ setF.name }}" style="width:100%;height:28px;padding:0 8px;border:1px solid {{ bd.name }};border-radius:2px;font-size:13px;outline:none"></div>
+        <div><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">차종 코드 <span style="color:#B3261E">*</span></div><input value="{{ f.code }}" onInput="{{ setF.code }}" style="width:100%;height:28px;padding:0 8px;border:1px solid {{ bd.code }};border-radius:2px;font-size:13px;outline:none"></div>
+      </div>
+      <div style="font:600 15px/22px 'Malgun Gothic';color:#1C2129;border-bottom:1px solid #E1E4E9;padding-bottom:4px;margin-bottom:12px">고정 설계 인자</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:24px;max-width:760px">
+        <div><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">디자인 *</div><select value="{{ f.design }}" onChange="{{ setF.design }}" style="width:100%;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>D-01</option><option>D-02</option><option>D-03</option></select></div>
+        <div><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">광학계 *</div><select value="{{ f.optic }}" onChange="{{ setF.optic }}" style="width:100%;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>리플렉터</option><option>렌즈</option><option>복합</option></select></div>
+        <div><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">LED 제조사 *</div><select value="{{ f.led }}" onChange="{{ setF.led }}" style="width:100%;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>제조사A</option><option>제조사B</option><option>제조사C</option></select></div>
+        <div><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">LED 개수 <span style="color:#B3261E">*</span></div><input value="{{ f.ledCnt }}" onInput="{{ setF.ledCnt }}" style="width:100%;height:28px;padding:0 8px;border:1px solid {{ bd.ledCnt }};border-radius:2px;font-size:13px;outline:none"></div>
+      </div>
+      <div style="font:600 15px/22px 'Malgun Gothic';color:#1C2129;border-bottom:1px solid #E1E4E9;padding-bottom:4px;margin-bottom:12px">대표 이미지</div>
+      <div style="display:flex;gap:16px;align-items:center"><div style="width:120px;height:80px;border:1px dashed #9AA2AE;background:#F7F8FA;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B7483">없음</div>
+        <div style="font-size:12px;color:#6B7483;line-height:18px">JPG / PNG, 최대 10MB<br>원본은 그대로 보관되며 목록·상세에는 축소 이미지가 표시됩니다.<br><button style="margin-top:8px;height:28px;padding:0 12px;border:1px solid #C8CDD5;background:#fff;border-radius:2px;cursor:pointer">파일 선택</button></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button onClick="{{ cancelForm }}" style="height:28px;padding:0 16px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">취소</button>
+      <button onClick="{{ saveForm }}" style="height:28px;padding:0 20px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">저장</button>
+    </div>
+  </sc-if>
+
+  <!-- SCR-012 상세 + 019/014 -->
+  <sc-if value="{{ s.prjDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;justify-content:space-between;align-items:center;height:32px;margin-bottom:12px">
+      <div style="display:flex;gap:16px;align-items:center"><a href="#" onClick="{{ toList }}" style="text-decoration:none;color:#14599F">‹ 목록으로</a><span style="font:600 18px/26px 'Malgun Gothic';color:#1C2129">{{ cur.name }}</span></div>
+      <div style="display:flex;gap:8px">
+        <button onClick="{{ editCur }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">수정</button>
+        <button onClick="{{ askDeleteCur }}" style="height:28px;padding:0 12px;background:#B3261E;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">삭제</button>
+        <button onClick="{{ openUpload }}" style="height:28px;padding:0 12px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">업로드</button>
+        <button onClick="{{ toast.history }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">변경 이력</button>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:16px;display:flex;gap:24px">
+      <div style="width:180px;flex:none"><div style="height:120px;background:{{ cur.thumbBg }};border:1px solid #E1E4E9;display:flex;align-items:center;justify-content:center;color:#9AA2AE;font-size:12px">{{ cur.thumbText }}</div>
+        <div style="display:flex;gap:4px;margin-top:8px"><button onClick="{{ toast.dl }}" style="flex:1;height:28px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:12px;cursor:pointer">다운로드</button></div>
+      </div>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><div style="font:600 13px/20px 'Malgun Gothic';margin-bottom:4px">기본정보</div>
+          <div style="border:1px solid #E1E4E9;display:grid;grid-template-columns:110px 1fr;font-size:13px"><span style="background:#F7F8FA;padding:6px 8px;font:600 12px 'Malgun Gothic';color:#4A525F;">코드</span><span style="padding:6px 8px">{{ cur.code }}</span><span style="background:#F7F8FA;padding:6px 8px;font:600 12px 'Malgun Gothic';color:#4A525F;">설계</span><span style="padding:6px 8px">{{ cur.design }}</span><span style="background:#F7F8FA;padding:6px 8px;font:600 12px 'Malgun Gothic';color:#4A525F;">광학계</span><span style="padding:6px 8px">{{ cur.optic }}</span><span style="background:#F7F8FA;padding:6px 8px;font:600 12px 'Malgun Gothic';color:#4A525F;">소유자</span><span style="padding:6px 8px">{{ cur.owner }}</span></div>
+        </div>
+        <div><div style="font:600 13px/20px 'Malgun Gothic';margin-bottom:4px">고정 설계 인자</div>
+          <div style="border:1px solid #E1E4E9;display:grid;grid-template-columns:110px 1fr;font-size:13px"><span style="background:#F7F8FA;padding:4px 8px;font:600 12px 'Malgun Gothic';color:#4A525F;">LED 제조사</span><span style="padding:4px 8px">{{ cur.led }}</span><span style="background:#F7F8FA;padding:4px 8px;font:600 12px 'Malgun Gothic';color:#4A525F;">LED 개수</span><span style="padding:4px 8px">{{ cur.ledCnt }}개</span></div>
+        </div>
+        <div style="grid-column:1/3;font-size:12px;color:#6B7483">최종 수정: {{ cur.owner }} / {{ cur.mod }}</div>
+      </div>
+    </div>
+    <div style="display:flex;margin-top:12px;border-bottom:1px solid #C8CDD5">
+      <div onClick="{{ tab1 }}" style="padding:0 16px;height:32px;display:flex;align-items:center;cursor:pointer;font-weight:600;color:{{ t1c }};border-bottom:2px solid {{ t1b }};margin-bottom:-1px">산출물</div>
+      <div onClick="{{ tab2 }}" style="padding:0 16px;height:32px;display:flex;align-items:center;cursor:pointer;font-weight:600;color:{{ t2c }};border-bottom:2px solid {{ t2b }};margin-bottom:-1px">버전 이력</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E1E4E9;border-top:0">
+    <sc-if value="{{ tabArt }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ hasWarn }}" hint-placeholder-val="{{ false }}"><div style="margin:12px 12px 0;padding:6px 12px;background:#FFF5E0;border:1px solid #F0CE84;border-radius:4px;color:#8A5A00;font-size:12px;line-height:18px">▲ 산출물 갱신이 필요합니다.</div></sc-if>
+      <div style="display:grid;grid-template-columns:32px 1.2fr 80px 70px 1fr 80px 110px 80px;height:32px;align-items:center;background:#F7F8FA;border-bottom:1px solid #E1E4E9;margin-top:12px;font:600 12px 'Malgun Gothic';color:#4A525F">
+        <span style="padding:0 8px">#</span><span style="padding:0 8px">산출물명</span><span style="padding:0 8px">유형</span><span style="padding:0 8px">단계</span><span style="padding:0 8px">파일</span><span style="padding:0 8px">크기</span><span style="padding:0 8px">버전</span><span style="padding:0 8px">기본</span>
+      </div>
+      <sc-for list="{{ arts }}" as="a" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:32px 1.2fr 80px 70px 1fr 80px 110px 80px;height:32px;align-items:center;border-bottom:1px solid #E1E4E9"><span style="padding:0 8px;color:#8A5A00;font-weight:700">{{ a.warn }}</span><span style="padding:0 8px">{{ a.name }}</span><span style="padding:0 8px">{{ a.kind }}</span><span style="padding:0 8px">{{ a.stage }}</span><span style="padding:0 8px;color:#14599F">{{ a.file }}</span><span style="padding:0 8px">{{ a.size }}</span><span style="padding:0 8px">{{ a.ver }}</span><span style="padding:0 8px;color:#1D7A3D">{{ a.base }}</span></div>
+      </sc-for>
+      <sc-if value="{{ noArts }}" hint-placeholder-val="{{ false }}"><div style="padding:32px;text-align:center;color:#6B7483">연결된 산출물이 없습니다<br><a href="#" onClick="{{ openUpload }}" style="color:#14599F">새 산출물 업로드</a></div></sc-if>
+    </sc-if>
+    <sc-if value="{{ tabVer }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:70px 1fr 140px 90px 80px;height:32px;align-items:center;background:#F7F8FA;border-bottom:1px solid #E1E4E9;font:600 12px 'Malgun Gothic';color:#4A525F">
+        <span style="padding:0 8px">버전</span><span style="padding:0 8px">해시</span><span style="padding:0 8px">수정일</span><span style="padding:0 8px">크기</span><span style="padding:0 8px">적용자</span>
+      </div>
+      <sc-for list="{{ vers }}" as="v" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:70px 1fr 140px 90px 80px;height:32px;align-items:center;border-bottom:1px solid #E1E4E9"><span style="padding:0 8px;font-weight:600">{{ v.v }}</span><span style="padding:0 8px;color:#14599F">{{ v.hash }}</span><span style="padding:0 8px">{{ v.at }}</span><span style="padding:0 8px">{{ v.size }}</span><span style="padding:0 8px">{{ v.by }}</span></div>
+      </sc-for>
+    </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- SCR-020 팀 문서 -->
+  <sc-if value="{{ s.team }}" hint-placeholder-val="{{ false }}">
+    <div style="height:32px;margin-bottom:12px;font:600 18px/26px 'Malgun Gothic';color:#1C2129">팀 설계 문서</div>
+    <div style="height:28px;font-size:12px;color:#6B7483;display:flex;align-items:center"><b style="color:#333A45">전체 5건</b></div>
+    <div style="background:#fff;border:1px solid #E1E4E9">
+      <div style="display:grid;grid-template-columns:1.6fr 110px 1fr 80px 100px;height:32px;align-items:center;background:#F7F8FA;border-bottom:1px solid #E1E4E9;font:600 12px 'Malgun Gothic';color:#4A525F">
+        <span style="padding:0 8px">문서명</span><span style="padding:0 8px">구분</span><span style="padding:0 8px">파일</span><span style="padding:0 8px">버전</span><span style="padding:0 8px">수정일</span>
+      </div>
+      <sc-for list="{{ teamDocs }}" as="d" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:1.6fr 110px 1fr 80px 100px;height:32px;align-items:center;border-bottom:1px solid #E1E4E9"><span style="padding:0 8px">{{ d[0] }}</span><span style="padding:0 8px">{{ d[1] }}</span><span style="padding:0 8px;color:#14599F">{{ d[2] }}</span><span style="padding:0 8px">{{ d[3] }}</span><span style="padding:0 8px;color:#6B7483">{{ d[4] }}</span></div></sc-for>
+    </div>
+  </sc-if>
+
+  <!-- SCR-040 통합 검색 -->
+  <sc-if value="{{ s.search }}" hint-placeholder-val="{{ false }}">
+    <div style="height:32px;margin-bottom:12px;font:600 18px/26px 'Malgun Gothic';color:#1C2129">통합 검색</div>
+    <div style="padding:6px 12px;background:#EDF4FC;border:1px solid #B8D4EF;border-radius:4px;color:#14599F;font-size:12px;margin-bottom:8px">ⓘ 검색 범위: 프로젝트명 · 산출물명 · 파일명 · 문서명</div>
+    <div style="height:28px;font-size:12px;color:#6B7483;display:flex;align-items:center"><b style="color:#333A45">‘{{ gqShown }}’ 검색 결과 {{ hitCount }}건</b></div>
+    <div style="background:#fff;border:1px solid #E1E4E9">
+      <sc-for list="{{ hits }}" as="h" hint-placeholder-count="3"><div onClick="{{ h.click }}" style="display:grid;grid-template-columns:90px 1fr 1fr;height:32px;align-items:center;border-bottom:1px solid #E1E4E9;padding:0 12px;cursor:pointer"><span style="font-weight:600;color:#14599F">{{ h.type }}</span><span>{{ h.name }}</span><span style="color:#6B7483">{{ h.sub }}</span></div></sc-for>
+      <sc-if value="{{ noHits }}" hint-placeholder-val="{{ false }}"><div style="padding:40px;text-align:center;color:#6B7483">검색 결과가 없습니다</div></sc-if>
+    </div>
+  </sc-if>
+
+  <!-- SCR-015 전송 -->
+  <sc-if value="{{ s.transfer }}" hint-placeholder-val="{{ false }}">
+    <div style="height:32px;margin-bottom:12px;font:600 18px/26px 'Malgun Gothic';color:#1C2129">전송 진행 표시</div>
+    <div style="background:#fff;border:1px solid #E1E4E9">
+      <sc-for list="{{ transfers }}" as="t" hint-placeholder-count="2">
+      <div style="display:grid;grid-template-columns:1.2fr 1.4fr 70px 110px;gap:12px;height:44px;align-items:center;border-bottom:1px solid #E1E4E9;padding:0 12px"><span style="font-family:Consolas,monospace;font-size:12px;color:#333A45">{{ t.file }}</span>
+        <div style="height:8px;background:#E1E4E9;border-radius:2px"><div style="height:8px;width:{{ t.pct }}%;background:{{ t.color }};border-radius:2px"></div></div>
+        <span style="font-weight:600;text-align:right">{{ t.pct }}%</span><span style="color:{{ t.color }};font-weight:600;font-size:12px">{{ t.label }}</span></div>
+      </sc-for>
+      <sc-if value="{{ noTransfers }}" hint-placeholder-val="{{ true }}"><div style="padding:40px;text-align:center;color:#6B7483">진행 중이거나 완료된 전송이 없습니다</div></sc-if>
+    </div>
+  </sc-if>
+
+  <!-- SCR-030 관리자 현황 -->
+  <sc-if value="{{ s.admin }}" hint-placeholder-val="{{ false }}">
+    <div style="height:32px;margin-bottom:12px;font:600 18px/26px 'Malgun Gothic';color:#1C2129">관리자 시스템 현황</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+      <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:12px"><div style="font:600 13px 'Malgun Gothic'">저장소 용량</div><div style="font:700 28px/36px 'Malgun Gothic';color:#1C2129">85%</div></div>
+      <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:12px"><div style="font:600 13px 'Malgun Gothic'">등록 프로젝트</div><div style="font:700 28px/36px 'Malgun Gothic';color:#1C2129">6</div></div>
+      <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:12px"><div style="font:600 13px 'Malgun Gothic'">활성 사용자</div><div style="font:700 28px/36px 'Malgun Gothic';color:#1C2129">18</div></div>
+      <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:12px"><div style="font:600 13px 'Malgun Gothic'">무결성 점검</div><div style="font:700 28px/36px 'Malgun Gothic';color:#1D7A3D">정상</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:12px"><div style="font:600 15px/22px 'Malgun Gothic';margin-bottom:8px">최근 로그</div>
+      <sc-for list="{{ logs }}" as="l" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:160px 90px 100px 1fr;height:28px;align-items:center;border-top:1px solid #E1E4E9;font-size:12px;color:#4A525F"><span>{{ l[0] }}</span><span>{{ l[1] }}</span><span style="color:{{ l[3] }};font-weight:600">{{ l[2] }}</span><span>{{ l[3] }}</span></div></sc-for>
+    </div>
+  </sc-if>
+
+  <!-- SCR-031 사용자 -->
+  <sc-if value="{{ s.users }}" hint-placeholder-val="{{ false }}">
+    <div style="height:32px;margin-bottom:12px;font:600 18px/26px 'Malgun Gothic';color:#1C2129">사용자 관리</div>
+    <div style="background:#fff;border:1px solid #E1E4E9">
+      <div style="display:grid;grid-template-columns:110px 1fr 100px 100px 150px;height:32px;align-items:center;background:#F7F8FA;border-bottom:1px solid #E1E4E9;font:600 12px 'Malgun Gothic';color:#4A525F">
+        <span style="padding:0 8px">사용자 ID</span><span style="padding:0 8px">이름</span><span style="padding:0 8px">권한</span><span style="padding:0 8px">상태</span><span style="padding:0 8px">최근 접속</span>
+      </div>
+      <sc-for list="{{ users }}" as="u" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:110px 1fr 100px 100px 150px;height:32px;align-items:center;border-bottom:1px solid #E1E4E9"><span style="padding:0 8px">{{ u[0] }}</span><span style="padding:0 8px">{{ u[1] }}</span><span style="padding:0 8px">{{ u[2] }}</span><span style="padding:0 8px;color:#1D7A3D">{{ u[3] }}</span><span style="padding:0 8px;color:#6B7483">{{ u[4] }}</span></div></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ s.stub }}" hint-placeholder-val="{{ false }}">
+    <div style="height:32px;margin-bottom:12px;font:600 18px/26px 'Malgun Gothic';color:#1C2129">{{ stubTitle }}</div>
+    <div style="background:#fff;border:1px solid #E1E4E9;border-radius:4px;padding:48px;text-align:center;color:#6B7483">이 화면은 프로토타입 범위에 포함되지 않았습니다.</div>
+  </sc-if>
+  </div>
+
+  <div style="height:26px;flex:none;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;padding:0 12px;gap:12px;font-size:12px;color:#4A525F">
+    <span style="color:{{ connColor }};font-weight:600">{{ connText }}</span><span>|</span>
+    <span onClick="{{ goAccount }}" style="cursor:pointer">{{ userLabel }}</span>
+    <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ false }}"><span>|</span><span onClick="{{ goTransfer }}" style="cursor:pointer;color:#14599F;font-weight:600">전송 {{ activeCount }}건</span></sc-if>
+    <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}"><span>|</span><span onClick="{{ goAdmin }}" style="cursor:pointer;color:#8A5A00;font-weight:600">▲ 저장소 85%</span></sc-if>
+  </div>
+
+  <!-- 토스트 -->
+  <sc-if value="{{ toastMsg }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;right:16px;bottom:42px;background:#1C2129;color:#fff;padding:8px 16px;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.18);font-size:13px;z-index:60">{{ toastMsg }}</div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- ===== 모달 ===== -->
+<sc-if value="{{ modal }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(28,33,41,.45);display:flex;align-items:center;justify-content:center;z-index:100">
+
+  <sc-if value="{{ m.settings }}" hint-placeholder-val="{{ false }}">
+  <div style="width:560px;background:#fff;border:1px solid #9AA2AE;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.18)">
+    <div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #E1E4E9;font:600 18px 'Malgun Gothic';color:#1C2129">환경설정<span style="font-size:12px;color:#6B7483;cursor:pointer">닫기</span></div>
+    <div style="padding:20px">
+      <div style="font:600 15px/22px 'Malgun Gothic';margin-bottom:8px">서버 연결</div>
+      <div style="border:1px solid #E1E4E9;border-radius:4px;padding:12px;margin-bottom:16px">
+        <div style="display:flex;gap:16px;margin-bottom:8px"><span style="font:600 12px 'Malgun Gothic';color:#4A525F">프로토콜 *</span><label>◯ HTTP</label><label><b style="color:#14599F">◉</b> HTTPS</label></div>
+        <div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">서버 주소 *</div><input value="10.20.31.45" style="width:100%;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none">
+        <div style="display:flex;gap:12px;margin-top:8px"><div style="flex:1"><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">포트 *</div><input value="8443" style="width:100%;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none"></div><div style="flex:1"><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">기본 다운로드 폴더 *</div><input value="D:\설계산출물" style="width:100%;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none"></div></div>
+      </div>
+      <div style="font:600 15px/22px 'Malgun Gothic';margin-bottom:8px">클라이언트 동작</div>
+      <div style="border:1px solid #E1E4E9;border-radius:4px;padding:12px;margin-bottom:16px">
+        <div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">기본 다운로드 폴더 *</div><div style="display:flex;gap:8px;margin-bottom:8px"><input value="D:\설계산출물" style="flex:1;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none"><button style="height:28px;padding:0 12px;border:1px solid #C8CDD5;background:#fff;border-radius:2px;cursor:pointer">선택</button></div>
+        <div style="display:flex;gap:16px"><span style="font:600 12px 'Malgun Gothic';color:#4A525F">목록 페이지 크기</span><span>◯ 20</span><span><b style="color:#14599F">◉</b> 50</span><span>◯ 100</span></div>
+      </div>
+      <div style="padding:8px 12px;background:#E7F6EC;border:1px solid #A9DCB9;border-radius:4px;color:#1D7A3D;font-size:12px">✓ 현재 설정으로 연결 정상 (확인: 14:31:05)</div>
+    </div>
+    <div style="height:48px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;padding:0 20px;gap:8px"><button style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">취소</button>
+      <button onClick="{{ saveSettings }}" style="height:28px;padding:0 20px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">저장</button><button style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">재검사</button></div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ m.confirmLogin }}" hint-placeholder-val="{{ false }}">
+  <div style="width:420px;background:#fff;border:1px solid #9AA2AE;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.18)">
+    <div style="height:40px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid #E1E4E9;font:600 15px 'Malgun Gothic'">확인</div>
+    <div style="padding:20px;display:flex;gap:12px"><span style="color:#8A5A00;font-weight:700">▲</span><span>연결 상태가 비정상입니다. 계속하시겠습니까?</span></div>
+    <div style="height:48px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:8px"><button onClick="{{ confirmLogin }}" style="height:28px;padding:0 12px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">확인</button><button onClick="{{ closeModal }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">취소</button></div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ m.upload }}" hint-placeholder-val="{{ false }}">
+  <div style="width:520px;background:#fff;border:1px solid #9AA2AE;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.18)">
+    <div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #E1E4E9;font:600 18px 'Malgun Gothic';color:#1C2129">산출물 업로드<span style="font-size:12px;color:#6B7483;cursor:pointer">닫기</span></div>
+    <div style="padding:20px">
+      <div style="padding:6px 12px;background:#EDF4FC;border:1px solid #B8D4EF;border-radius:4px;color:#14599F;font-size:12px;margin-bottom:12px">ⓘ 연결 대상: {{ cur.name }} (자동 등록)</div>
+      <div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">파일 *</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px"><input value="{{ upFile }}" onInput="{{ setUpFile }}" style="flex:1;height:28px;padding:0 8px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;outline:none"><button style="height:28px;padding:0 12px;border:1px solid #C8CDD5;background:#fff;border-radius:2px;cursor:pointer">선택</button></div>
+      <div style="display:flex;gap:12px"><div style="flex:1"><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">산출물 종류 *</div><select style="width:100%;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>시뮬레이션</option><option>성적서</option><option>도면</option><option>기타</option></select></div><div style="flex:1"><div style="font:600 12px 'Malgun Gothic';color:#4A525F;margin-bottom:4px">단계 *</div><select style="width:100%;height:28px;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;padding:0 8px"><option>선행</option><option>양산</option></select></div></div>
+    </div>
+    <div style="height:48px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:8px"><button onClick="{{ closeModal }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">취소</button><button onClick="{{ startUpload }}" style="height:28px;padding:0 20px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">업로드 시작</button></div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ m.del }}" hint-placeholder-val="{{ false }}">
+  <div style="width:460px;background:#fff;border:1px solid #9AA2AE;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.18)">
+    <div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #E1E4E9;font:600 18px 'Malgun Gothic';color:#1C2129">삭제 확인<span style="font-size:12px;color:#6B7483;cursor:pointer">닫기</span></div>
+    <div style="padding:20px">
+      <div style="padding:8px 12px;background:#FDEBEA;border:1px solid #F2B4B0;border-radius:4px;color:#B3261E;font-size:12px;line-height:18px;margin-bottom:12px"><b>⛔ ‘{{ delTarget.name }}’ 프로젝트를 삭제하시겠습니까?</b><br>보관 기간이 지나면 영구 삭제됩니다.</div>
+      <div style="font-size:12px;color:#6B7483">삭제 후 복구는 휴지통에서 가능하며 영구삭제는 관리자만 수행할 수 있습니다.</div>
+    </div>
+    <div style="height:48px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:8px"><button onClick="{{ closeModal }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">취소</button><button onClick="{{ doDelete }}" style="height:28px;padding:0 20px;background:#B3261E;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">삭제</button></div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ m.account }}" hint-placeholder-val="{{ false }}">
+  <div style="width:400px;background:#fff;border:1px solid #9AA2AE;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.18)">
+    <div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #E1E4E9;font:600 18px 'Malgun Gothic'">내 계정 정보<span onClick="{{ closeModal }}" style="font-size:12px;color:#6B7483;cursor:pointer">닫기</span></div>
+    <div style="padding:20px;display:grid;grid-template-columns:90px 1fr;gap:8px;font-size:13px"><span style="font:600 12px 'Malgun Gothic';color:#4A525F">사용자 ID</span><span style="font-family:Consolas,monospace">admin</span><span style="font:600 12px 'Malgun Gothic';color:#4A525F">권한</span><span>관리자</span><span style="font:600 12px 'Malgun Gothic';color:#4A525F">로그인 상태</span><span>정상</span></div>
+    <div style="height:48px;background:#EFF1F4;border-top:1px solid #C8CDD5;display:flex;align-items:center;justify-content:space-between;padding:0 20px"><button onClick="{{ logout }}" style="height:28px;padding:0 12px;background:#fff;border:1px solid #C8CDD5;border-radius:2px;font-size:13px;cursor:pointer">로그아웃</button><button onClick="{{ closeModal }}" style="height:28px;padding:0 12px;background:#14599F;color:#fff;border:0;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer">확인</button></div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    stage: 'splash', checking: true, attempt: 0, checkTime: '--:--:--', modal: null,
+    uid: '', pw: '', showPw: false, loginErr: false, loggingIn: false, role: 'user',
+    screen: 'prjList', openMenu: null, gq: '', gqShown: '', toastMsg: '',
+    fName: '', fDesign: '전체', fOptic: '전체', applied: { n: '', d: '전체', o: '전체' },
+    sel: null, curId: 1, tab: 'art', upFile: 'sim_a_v4.xmp', delId: null,
+    f: { name: '', code: '', design: 'D-01', optic: '리플렉터', led: '제조사A', ledCnt: '' }, errs: [], editId: null,
+    transfers: [],
+    projects: [
+      { id: 1, name: 'ABC 프로젝트', code: 'ABC-2027', design: 'D-01', optic: '리플렉터', led: '제조사A', ledCnt: 4, arts: 4, mod: '2027-03-14 16:20', img: true, owner: '홍길동' },
+      { id: 2, name: 'DEF 프로젝트', code: 'DEF-2027', design: 'D-02', optic: '렌즈', led: '제조사B', ledCnt: 6, arts: 3, mod: '2027-03-14 11:05', img: true, owner: '김설계' },
+      { id: 3, name: 'GHI 프로젝트', code: 'GHI-2026', design: 'D-01', optic: '리플렉터', led: '제조사A', ledCnt: 2, arts: 0, mod: '2027-03-13 17:40', img: true, owner: '이광학' },
+      { id: 4, name: 'JKL 프로젝트', code: 'JKL-2026', design: 'D-03', optic: '복합', led: '제조사C', ledCnt: 8, arts: 4, mod: '2027-03-12 09:15', img: false, owner: '박렌즈' },
+      { id: 5, name: 'MNO 프로젝트', code: 'MNO-2026', design: 'D-02', optic: '렌즈', led: '제조사A', ledCnt: 3, arts: 2, mod: '2027-03-10 14:02', img: true, owner: '홍길동' },
+      { id: 6, name: 'PQR 프로젝트', code: 'PQR-2025', design: 'D-03', optic: '복합', led: '제조사B', ledCnt: 5, arts: 1, mod: '2027-03-08 10:48', img: false, owner: '김설계' }
+    ]
+  };
+  timers = [];
+  componentDidMount() { this.runCheck(); }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  now() { return new Date().toTimeString().slice(0, 8); }
+  runCheck() {
+    this.setState({ checking: true });
+    this.later(() => this.setState(s => ({ checking: false, attempt: s.attempt + 1, checkTime: this.now() })), 1400);
+  }
+  toast(m) { this.setState({ toastMsg: m }); this.later(() => this.setState({ toastMsg: '' }), 2400); }
+  go(screen, extra) { this.setState({ screen, openMenu: null, ...(extra || {}) }); }
+  saveF(k) { return e => { const v = e.target.value; this.setState(s => ({ f: { ...s.f, [k]: v } })); }; }
+  rowView(p, selId) {
+    return { id: p.id, name: p.name, design: p.design, optic: p.optic, led: p.led, arts: p.arts, mod: p.mod.slice(5),
+      artColor: p.arts ? '#333A45' : '#9AA2AE', bg: selId === p.id ? '#D6E6F7' : '#fff',
+      thumbBg: p.img ? 'linear-gradient(135deg,#C8CDD5,#E1E4E9)' : '#F7F8FA', thumbText: p.img ? '' : '없음' };
+  }
+  filtered() {
+    const a = this.state.applied;
+    return this.state.projects.filter(p => p.name.includes(a.n) && (a.d === '전체' || p.design === a.d) && (a.o === '전체' || p.optic === a.o));
+  }
+  cur() { return this.state.projects.find(p => p.id === this.state.curId) || this.state.projects[0]; }
+  menuDefs() {
+    const admin = this.state.role === 'admin', stub = (t) => () => this.go('stub', { stubTitle: t });
+    const defs = [
+      { label: '차종 프로젝트', items: [['프로젝트 목록', 'SCR-010', () => this.go('prjList')]] },
+      { label: '팀 설계 문서', items: [['팀 문서 목록', 'SCR-020', () => this.go('team')]] },
+      { label: '통합 검색', items: [['통합 검색', 'SCR-040', () => this.go('search')]] },
+      { label: '내 작업', items: [['전송 진행 표시', 'SCR-015', () => this.go('transfer')], ['내 계정 정보', 'SCR-005', () => this.setState({ modal: 'account', openMenu: null })]] }
+    ];
+    if (admin) defs.push({ label: '시스템 관리', items: [
+      ['시스템 현황', 'SCR-030', () => this.go('admin')], ['사용자 관리', 'SCR-031', () => this.go('users')],
+      ['데이터 정리 ▸ 휴지통', 'SCR-033', stub('휴지통 관리')], ['데이터 정리 ▸ 영구삭제 대상', 'SCR-034', stub('영구삭제 대상')],
+      ['운영 설정 ▸ 보관 정책', 'SCR-035', stub('보관 정책 설정')], ['운영 설정 ▸ 용량 관리', 'SCR-041', stub('용량 관리')],
+      ['감사·점검 ▸ 로그 조회', 'SCR-036', stub('로그 조회')], ['감사·점검 ▸ 무결성 점검', 'SCR-042', stub('무결성 점검')],
+      ['백업·복원 ▸ 백업 관리', 'SCR-038', stub('백업 관리')] ] });
+    defs.push({ label: '도움말', items: [['사용 안내·버전 정보', 'SCR-006', stub('사용 안내·버전 정보')], ['환경설정', 'SCR-002', () => this.setState({ modal: 'settings', openMenu: null })]] });
+    return defs;
+  }
+  renderVals() {
+    const st = this.state, ck = st.checking, ok = st.attempt >= 2, S = st.screen;
+    const mk = (name, bad) => ck ? { name, icon: '◌', color: '#14599F', text: '점검 중' } : bad ? { name, icon: '⛔', color: '#B3261E', text: '연결 실패' } : { name, icon: '✓', color: '#1D7A3D', text: '정상' };
+    const conn = [mk('DB 서버'), mk('API 서버'), mk('파일 저장소', !ok)];
+    const cur = this.cur(), admin = st.role === 'admin';
+    const view = p => ({ ...p, thumbBg: p.img ? 'linear-gradient(135deg,#C8CDD5,#E1E4E9)' : '#F7F8FA', thumbText: p.img ? '대표 이미지' : '없음' });
+    const rowsRaw = this.filtered();
+    const rows = rowsRaw.map(p => ({ ...this.rowView(p, st.sel), click: () => this.setState({ sel: p.id }), open: () => this.go('prjDetail', { curId: p.id, tab: 'art' }) }));
+    const noSel = st.sel == null;
+    const kinds = ['시뮬레이션', '성적서', '도면', '기타'], stages = ['선행', '양산', '선행', '선행'], files = ['sim_a.xmp', 'report.pdf', 'lens.pf', 'review.pptx'], names = ['광학 시뮬레이션', '광학 성적서', '리플렉터 도면', '검토 보고서'];
+    const sizes = ['1.8MB', '2.3MB', '4.1MB', '760KB']; const vs = ['v4', 'v2', 'v1', 'v3']; const base = ['기본', '기본', '기본', '보조'];
+    const arts = Array.from({ length: Math.min(cur.arts, 4) }, (_, i) => ({ warn: i === 2 ? '▲' : '', name: names[i], kind: kinds[i], stage: stages[i], file: files[i], size: sizes[i], ver: vs[i], base: base[i] }));
+    const hits = [];
+    const q = st.gqShown;
+    if (q) {
+      st.projects.filter(p => p.name.includes(q)).forEach(p => hits.push({ type: '프로젝트', name: p.name, sub: p.code, click: () => this.go('prjDetail', { curId: p.id, tab: 'art' }) }));
+      names.forEach((n, i) => { if (n.includes(q) || files[i].includes(q)) hits.push({ type: '산출물', name: n, sub: 'ABC 프로젝트 · ' + files[i], click: () => this.go('prjDetail', { curId: 1, tab: 'art' }) }); });
+      ['광학 설계 가이드', '배광 평가 기준'].forEach(n => { if (n.includes(q)) hits.push({ type: '팀 문서', name: n, sub: '팀 설계 문서', click: () => this.go('team') }); });
+    }
+    const trs = st.transfers.map(t => ({ ...t, color: t.pct >= 100 ? '#1D7A3D' : '#14599F', label: t.pct >= 100 ? '✓ 전송 완료' : '전송 중' }));
+    const active = st.transfers.filter(t => t.pct < 100).length;
+    const menus = this.menuDefs().map(d => {
+      const open = st.openMenu === d.label;
+      return { label: d.label, open, bg: open ? '#D6E6F7' : 'transparent', weight: d.label === '시스템 관리' ? 600 : 400,
+        click: e => { e.stopPropagation(); this.setState({ openMenu: open ? null : d.label }); },
+        items: d.items.map(it => ({ label: it[0], code: it[1], color: '#333A45', bg: '#fff', click: it[2] })) };
+    });
+    const errMap = {}; st.errs.forEach(e => { errMap[e.k] = e.m; });
+    const bd = {}, em = {}; ['name', 'code', 'ledCnt'].forEach(k => { em[k] = errMap[k] || ''; bd[k] = errMap[k] ? '#B3261E' : '#C8CDD5'; });
+    const setF = {}; ['name', 'code', 'design', 'optic', 'led', 'ledCnt'].forEach(k => { setF[k] = this.saveF(k); });
+    const delP = st.projects.find(p => p.id === st.delId) || cur;
+    const tabArt = st.tab === 'art';
+    const hashes = ['9f2c41a7…e03b', '4d81be90…77a2', 'a03e5c12…19fd'];
+    const vers = [3, 2, 1].map((v, i) => ({ v: 'v' + v, hash: hashes[i], at: ['2027-03-14 16:20', '2027-02-27 10:11', '2027-02-02 09:30'][i], size: ['4.2MB', '4.0MB', '3.6MB'][i], by: '홍길동' }));
+    return {
+      isSplash: st.stage === 'splash', isLogin: st.stage === 'login', isApp: st.stage === 'app',
+      conn, checking: ck, checkTime: ck ? '--:--:--' : st.checkTime, hasConnErr: !ck && !ok,
+      recheck: () => this.runCheck(),
+      openSettings: () => this.setState({ modal: 'settings' }),
+      tryLogin: () => (!ck && !ok) ? this.setState({ modal: 'confirmLogin' }) : this.setState({ stage: 'login', loginErr: false }),
+      confirmLogin: () => this.setState({ modal: null, stage: 'login', loginErr: false }),
+      modal: !!st.modal, m: { settings: st.modal === 'settings', confirmLogin: st.modal === 'confirmLogin', upload: st.modal === 'upload', del: st.modal === 'del', account: st.modal === 'account' },
+      closeModal: () => this.setState({ modal: null }),
+      saveSettings: () => { this.setState({ modal: null, attempt: 2 }); this.runCheck(); },
+      uid: st.uid, pw: st.pw, pwType: st.showPw ? 'text' : 'password', pwToggleLabel: st.showPw ? '숨김' : '표시',
+      setUid: e => this.setState({ uid: e.target.value }), setPw: e => this.setState({ pw: e.target.value }),
+      togglePw: () => this.setState({ showPw: !st.showPw }), loginErr: st.loginErr,
+      loginKey: e => { if (e.key === 'Enter') this.doLogin(); },
+      doLogin: () => this.doLogin(), backSplash: () => this.setState({ stage: 'splash' }),
+      s: { prjList: S === 'prjList', prjForm: S === 'prjForm', prjDetail: S === 'prjDetail', team: S === 'team', search: S === 'search', transfer: S === 'transfer', admin: S === 'admin', users: S === 'users', stub: S === 'stub' },
+      stubTitle: st.stubTitle, menus, closeMenu: () => st.openMenu && this.setState({ openMenu: null }),
+      gq: st.gq, setGq: e => this.setState({ gq: e.target.value }), gqKey: e => { if (e.key === 'Enter') this.doGS(); }, doGlobalSearch: () => this.doGS(),
+      gqShown: q, hits, hitCount: hits.length, noHits: !!q && !hits.length,
+      fName: st.fName, fDesign: st.fDesign, fOptic: st.fOptic,
+      setFName: e => this.setState({ fName: e.target.value }), setFDesign: e => this.setState({ fDesign: e.target.value }), setFOptic: e => this.setState({ fOptic: e.target.value }),
+      applyF: () => this.applyF(),
+      resetF: e => { e && e.preventDefault && e.preventDefault(); this.setState({ fName: '', fDesign: '전체', fOptic: '전체', applied: { n: '', d: '전체', o: '전체' } }); },
+      rows, rowCount: rows.length, noRows: !rows.length,
+      selCount: noSel ? 0 : 1, noSel, btnBg: noSel ? '#F7F8FA' : '#fff', btnFg: noSel ? '#9AA2AE' : '#333A45', delBg: noSel ? '#EFF1F4' : '#B3261E', delFg: noSel ? '#9AA2AE' : '#fff',
+      openSel: () => this.go('prjDetail', { curId: st.sel, tab: 'art' }), editSel: () => this.editPrj(st.sel),
+      askDelete: () => this.setState({ modal: 'del', delId: st.sel }),
+      newPrj: () => this.go('prjForm', { editId: null, errs: [], f: { name: '', code: '', design: 'D-01', optic: '리플렉터', led: '제조사A', ledCnt: '' } }),
+      formTitle: st.editId ? '차종 프로젝트 수정' : '차종 프로젝트 등록',
+      hasErrs: st.errs.length > 0, errCount: st.errs.length, errs: st.errs.map(e => e.m), f: st.f, setF, bd, em,
+      cancelForm: e => { e && e.preventDefault && e.preventDefault(); this.go(st.editId ? 'prjDetail' : 'prjList'); },
+      saveForm: () => this.saveForm(),
+      cur: view(cur), toList: e => { e.preventDefault(); this.go('prjList'); },
+      editCur: () => this.editPrj(cur.id), askDeleteCur: () => this.setState({ modal: 'del', delId: cur.id }),
+      openUpload: e => { e && e.preventDefault && e.preventDefault(); this.setState({ modal: 'upload' }); },
+      toast: { history: () => this.toast('변경 이력은 프로토타입 범위 외입니다'), dl: () => this.toast('다운로드 폴더: D:\설계산출물\') },
+      tab1: () => this.setState({ tab: 'art' }), tab2: () => this.setState({ tab: 'ver' }),
+      t1c: tabArt ? '#14599F' : '#4A525F', t1b: tabArt ? '#14599F' : 'transparent', t2c: tabArt ? '#4A525F' : '#14599F', t2b: tabArt ? 'transparent' : '#14599F',
+      tabArt, tabVer: !tabArt, arts, noArts: !arts.length, hasWarn: cur.arts >= 3, vers,
+      delTarget: delP,
+      doDelete: () => { this.setState(s => ({ projects: s.projects.filter(p => p.id !== s.delId), modal: null, sel: null, screen: 'prjList' })); this.toast('휴지통으로 이동했습니다'); },
+      upFile: st.upFile, setUpFile: e => this.setState({ upFile: e.target.value }), startUpload: () => this.startUpload(),
+      teamDocs: [['광학 설계 가이드', '가이드', 'optic_guide.pdf', 'v4', '2027-03-02'], ['배광 평가 기준', '기준서', 'beam_std.docx', 'v2', '2027-02-18'], ['LED 선정 체크리스트', '안내서', 'led_select.xlsx', 'v3', '2027-02-10'], ['광학계 설계 표준', '표준', 'optics_std.pdf', 'v1', '2027-01-28'], ['검증 절차서', '절차', 'verify_proc.docx', 'v2', '2027-01-12']],
+      transfers: trs, noTransfers: !trs.length,
+      logs: [['2027-03-14 16:20:11', 'hong01', '업로드', '#14599F'], ['2027-03-14 15:02:47', 'kim02', '로그인', '#1D7A3D'], ['2027-03-14 11:20:03', 'lee03', '다운로드', '#14599F'], ['2027-03-14 09:34:12', 'admin', '점검', '#8A5A00']],
+      users: [['hong01', '홍길동', '관리자', '활성', '2027-03-14 14:30'], ['kim02', '김설계', '일반', '활성', '2027-03-14 15:02'], ['lee03', '이광학', '일반', '활성', '2027-03-13 17:40'], ['park04', '박렌즈', '일반', '비활성', '2027-03-10 10:11']],
+      connText: !ok ? '▲ 저장소 연결 비정상' : '✓ 연결 정상',
+      connColor: !ok ? '#8A5A00' : '#1D7A3D',
+      userLabel: '홍길동 (' + (admin ? '관리자' : '일반 사용자') + ')',
+      goAccount: () => this.setState({ modal: 'account' }), goTransfer: () => this.go('transfer'), goAdmin: () => this.go('admin'),
+      hasActive: active > 0, activeCount: active, isAdmin: admin, roleName: admin ? '관리자' : '일반 사용자',
+      logout: () => this.setState({ modal: null, stage: 'login', pw: '', screen: 'prjList' }),
+      toastMsg: st.toastMsg
+    };
+  }
+  doLogin() {
+    const { uid, pw } = this.state;
+    if (!uid.trim() || !pw || pw === 'fail') { this.setState({ loginErr: true, pw: '' }); return; }
+    this.setState({ loggingIn: true, loginErr: false });
+    this.later(() => { const admin = uid.toLowerCase().includes('admin');
+      this.setState({ loggingIn: false, stage: 'app', role: admin ? 'admin' : 'user', screen: admin ? 'admin' : 'prjList', pw: '' }); }, 700);
+  }
+  doGS() { const q = this.state.gq.trim(); this.setState({ gqShown: q, screen: 'search', openMenu: null }); }
+  applyF() { const s = this.state; this.setState({ applied: { n: s.fName.trim(), d: s.fDesign, o: s.fOptic }, sel: null }); }
+  editPrj(id) { const p = this.state.projects.find(x => x.id === id); if (!p) return;
+    this.go('prjForm', { editId: id, errs: [], f: { name: p.name, code: p.code, design: p.design, optic: p.optic, led: p.led, ledCnt: String(p.ledCnt) } }); }
+  saveForm() {
+    const f = this.state.f, errs = [];
+    if (!f.name.trim()) errs.push({ k: 'name', m: '프로젝트명: 필수 입력 항목입니다' });
+    if (!f.code.trim()) errs.push({ k: 'code', m: '차종 코드: 필수 입력 항목입니다' });
+    if (!/^[1-9]\d*$/.test(String(f.ledCnt).trim())) errs.push({ k: 'ledCnt', m: 'LED 개수: 1 이상의 정수를 입력하십시오' });
+    if (errs.length) { this.setState({ errs }); return; }
+    const stamp = '2027-03-15 ' + this.now().slice(0, 5), eid = this.state.editId;
+    if (eid) this.setState(s => ({ projects: s.projects.map(p => p.id === eid ? { ...p, ...f, ledCnt: +f.ledCnt, mod: stamp } : p), screen: 'prjDetail', curId: eid, errs: [] }));
+    else { const id = Date.now(); this.setState(s => ({ projects: [{ id, ...f, ledCnt: +f.ledCnt, arts: 0, mod: stamp, img: false, owner: '홍길동' }, ...s.projects], screen: 'prjDetail', curId: id, errs: [] })); }
+    this.toast('저장되었습니다');
+  }
+  startUpload() {
+    const id = Date.now(), file = this.state.upFile || 'file.dat', pid = this.state.curId;
+    this.setState(s => ({ modal: null, transfers: [{ id, file, pct: 0 }, ...s.transfers] }));
+    const tick = () => this.setState(s => {
+      const t = s.transfers.find(x => x.id === id); if (!t) return null;
+      const pct = Math.min(100, t.pct + 12 + Math.floor(Math.random() * 14));
+      if (pct >= 100) { this.toast('업로드 완료: ' + file); }
+      else this.later(tick, 450);
+      return { transfers: s.transfers.map(x => x.id === id ? { ...x, pct } : x),
+        projects: pct >= 100 ? s.projects.map(p => p.id === pid ? { ...p, arts: Math.min(4, p.arts + 1), mod: '2027-03-15 ' + this.now().slice(0, 5) } : p) : s.projects };
+    });
+    this.later(tick, 400);
+  }
+}
+</script>
+</body>
+</html>
